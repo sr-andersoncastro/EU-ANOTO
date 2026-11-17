@@ -6,6 +6,12 @@
 <meta name="theme-color" content="#f97316">
 <title>Eu Anoto</title>
 <link rel="stylesheet" href="app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Eu Anoto">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 <header class="topbar"><img src="app-icon.png" alt=""><span>Eu Anoto</span></header>
@@ -18,5 +24,6 @@
 <script src="voice.js"></script>
 <script src="export.js"></script>
 <script src="device.js"></script>
+<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!window.AndroidDevice&&!window.Capacitor?.isNativePlatform?.()){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
 </html>

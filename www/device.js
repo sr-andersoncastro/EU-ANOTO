@@ -108,6 +108,11 @@ async function exportReport(type){
   const[s,e]=bounds();
   if(!dateOK(s)||!dateOK(e)||s>e){toast('Confira a data inicial e final.');return}
   try{
+    if(!window.AndroidPlus){
+      /* Navegador / PWA: baixa o Excel ou abre o relatório para imprimir/salvar em PDF. */
+      if(type==='pdf'){const w=window.open('','_blank');if(!w)throw Error('Permita pop-ups para abrir o relatório.');w.document.write(pdfHTML());w.document.close();setTimeout(()=>{try{w.print()}catch(_){}},400);toast('Relatório aberto. Use Compartilhar > Imprimir para salvar em PDF.');return}
+      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xlsxBytes()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=`Eu-Anoto-${s}-${e}.xlsx`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Excel gerado.');return;
+    }
     if(type==='pdf')await plusCall('pdf',pdfHTML());
     else{const bytes=xlsxBytes();let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode(...bytes.subarray(i,i+8192));await plusCall('xlsx',btoa(bin),`Eu-Anoto-${s}-${e}.xlsx`)}
     toast('Exportação aberta no Android.');

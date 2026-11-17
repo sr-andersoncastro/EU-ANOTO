@@ -1,3 +1,5 @@
+> **Atualização:** distribuição sem Apple Developer → ver `INSTALAR_IPHONE_SEM_APPLE.md`. Este documento vale só se um dia publicar pela Apple.
+
 # Eu Anoto no iPhone, sem Mac
 
 O app é web (Capacitor). Um Mac na nuvem (Codemagic) compila e envia ao TestFlight a cada push na `main`.
