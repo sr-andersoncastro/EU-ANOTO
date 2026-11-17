@@ -1,0 +1,6 @@
+{
+  "appId": "com.euanoto.app",
+  "appName": "Eu Anoto",
+  "webDir": "www",
+  "ios": { "contentInset": "never" }
+}

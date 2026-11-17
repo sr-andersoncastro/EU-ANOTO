@@ -1,0 +1,62 @@
+# Compila o Eu Anoto para iPhone na nuvem (sem Mac) e envia ao TestFlight.
+# Pré-requisito: ver docs/IOS_SEM_MAC.md (integração App Store Connect no Codemagic).
+workflows:
+  ios-testflight:
+    name: Eu Anoto iOS (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 40
+    integrations:
+      app_store_connect: eu-anoto-asc   # nome da integração criada no Codemagic
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.euanoto.app"
+        APP_STORE_APPLE_ID: "COLOQUE_AQUI"   # ID numérico do app no App Store Connect
+    triggering:
+      events: [push]
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Gerar projeto iOS
+        script: |
+          npx cap add ios
+          npx @capacitor/assets generate --ios --iconBackgroundColor '#f97316'
+          npx cap sync ios
+      - name: Permissões do iPhone (Info.plist)
+        script: |
+          PL=ios/App/App/Info.plist
+          add() { /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PL" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PL"; }
+          add NSLocationWhenInUseUsageDescription "O Eu Anoto usa sua localização para registrar onde foi o gasto."
+          add NSMicrophoneUsageDescription "O microfone é usado para lançar gastos por voz."
+          add NSSpeechRecognitionUsageDescription "O reconhecimento de voz transforma o que você fala em lançamento."
+          add NSFaceIDUsageDescription "Face ID protege seus dados financeiros."
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PL" 2>/dev/null || true
+      - name: Assinatura automática
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Número de build
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          echo "BUILD_NUMBER=$((LATEST + 1))" >> $CM_ENV
+      - name: Compilar IPA
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App \
+            --archive-flags="-destination 'generic/platform=iOS'"
+        # o número de build é aplicado abaixo
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
